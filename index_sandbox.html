@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sandbox</title>
+    <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+  </head>
+  <body>
+    <h2>Set Message Publish Rate</h2>
+    <input type="range" id="rateSlider" min="0" max="100" value="1" />
+    <span id="rateDisplay">1</span> messages per second
+    <h2>Received Messages</h2>
+    <pre id="messages"></pre>
+
+    <script>
+      const ably = new Ably.Realtime({
+        key: 'xfRUFw.Xg0IGw:HeLD9bIYUyNcq1lLGTYymLSsO5zbk-_J-b0q1Nn2l7U',
+        environment: 'sandbox'
+      });
+      const channel = ably.channels.get('conflation_demo:foo', {
+        params: { rewind: '1' },
+      });
+      let messageGeneratorInterval;
+      let messageQueue = [];
+      let publishRate = 1;
+
+      document
+        .getElementById('rateSlider')
+        .addEventListener('input', function () {
+          publishRate = this.value;
+          document.getElementById('rateDisplay').textContent = publishRate;
+          adjustMessageGeneration();
+        });
+
+      let counter = 0;
+      const markets = ['market-A', 'market-B', 'market-C', 'market-D'];
+      
+      function pickOneFrom(array) {
+        return array[Math.floor(Math.random() * array.length)];
+      }
+
+      channel.subscribe(function (message) {
+        counter++;
+        console.log(message);
+        const msgDisplay = document.getElementById('messages');
+        const msgData = JSON.stringify(message.data, null, 2);
+        const market = message.extras?.headers.market || {};
+        msgDisplay.textContent = `${counter}: Market: ${market || 'N/A'}\nData: ${msgData}\n\n` + msgDisplay.textContent;
+      });
+
+      // Adjust message generation based on the current publish rate
+      function adjustMessageGeneration() {
+        if (messageGeneratorInterval) {
+          clearInterval(messageGeneratorInterval);
+        }
+
+        if (publishRate > 0) {
+          messageGeneratorInterval = setInterval(() => {
+            messageQueue.push(generateMessage());
+            publishMessage();
+          }, 1000 / publishRate);
+        }
+      }
+
+      // Publish a single message from the queue
+      function publishMessage() {
+        const message = messageQueue.shift();
+        channel.publish(message, (err) => {
+          if (err) {
+            console.log('Failed to publish message:', err);
+          }
+        });
+      }
+
+      // Generate a random message
+      function generateMessage() {
+        const market = pickOneFrom(markets);
+        return {
+            name: "message",
+            data: {
+                timestamp: Date.now(),
+                update: counter
+            },
+            extras: {headers: {
+                    market: market
+                }
+            }
+        };
+      }
+
+      adjustMessageGeneration();
+    </script>
+  </body>
+</html>
