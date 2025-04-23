@@ -15,7 +15,7 @@
 
     <script>
       const ably = new Ably.Realtime({
-        key: 'xfRUFw.Xg0IGw:HeLD9bIYUyNcq1lLGTYymLSsO5zbk-_J-b0q1Nn2l7U',
+        key: `${ABLY_API_KEY ?? ''}`
         environment: 'sandbox'
       });
       const channel = ably.channels.get('conflation_demo:foo', {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Message Publisher</title>
+    <title>Normal</title>
     <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
   </head>
   <body>
@@ -14,10 +14,10 @@
     <pre id="messages"></pre>
 
     <script>
-      const ably = new Ably.Realtime(
-        'EARISg.rWJuzw:VbLCyNOYnXB68VTBN0Sq5vb-ApgjzpzINMRpReO5TLQ'
-      );
-      const channel = ably.channels.get('conflation:foo', {
+      const ably = new Ably.Realtime({
+        key: `${ABLY_API_KEY ?? ''}`
+      });
+      const channel = ably.channels.get('conflation_demo:foo', {
         params: { rewind: '1' },
       });
       let messageGeneratorInterval;
